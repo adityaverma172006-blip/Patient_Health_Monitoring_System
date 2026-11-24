@@ -49,9 +49,9 @@
 This system provides **three complementary dashboard interfaces**:
 
 1. **Standalone & Local Live Web Dashboard (`index.html` / `web_dashboard.py`):**
+   - **Live Public Web Link (Hosted on GitHub Pages):**  
+     👉 [https://adityaverma172006-blip.github.io/Patient_Health_Monitoring_System/](https://adityaverma172006-blip.github.io/Patient_Health_Monitoring_System/)
    - **Offline / Local Access:** Double-click [`index.html`](file:///C:/Users/hp/.gemini/antigravity/scratch/Patient_Health_Monitoring_System/index.html) or run `python web_dashboard.py` to open `http://127.0.0.1:5000`
-   - **Free Public Web Hosting (GitHub Pages):** When pushed to GitHub, enable GitHub Pages to get an instant live web URL:  
-     `https://<your-username>.github.io/Patient_Health_Monitoring_System/`
 2. **Blynk IoT Cloud Web & Mobile Dashboard:**
    - **Blynk Console Live Link:** [https://blynk.cloud/dashboard/](https://blynk.cloud/dashboard/)
 3. **Interactive Terminal Monitoring Console:**
@@ -79,33 +79,23 @@ Diagnostic startup validation, telemetry ingestion, clinical condition evaluatio
 
 ---
 
-## GitHub Repository Setup & 1-Click Push
+## GitHub Repository & Live Deployment
 
-The project is pre-configured with Git version control on branch `main`.
+- **GitHub Repository URL:**  
+  👉 [https://github.com/adityaverma172006-blip/Patient_Health_Monitoring_System](https://github.com/adityaverma172006-blip/Patient_Health_Monitoring_System)
+- **Live Interactive Web Dashboard (GitHub Pages):**  
+  👉 [https://adityaverma172006-blip.github.io/Patient_Health_Monitoring_System/](https://adityaverma172006-blip.github.io/Patient_Health_Monitoring_System/)
 
-### Option A: 1-Click Push Wizard (Recommended for Windows)
-1. Double-click the file [`push_to_github.bat`](file:///C:/Users/hp/.gemini/antigravity/scratch/Patient_Health_Monitoring_System/push_to_github.bat) (or run `.\push_to_github.ps1` in VS Code terminal).
-2. It guides you to create a repository at [https://github.com/new](https://github.com/new) named `Patient_Health_Monitoring_System`.
-3. Paste your repository URL and press **Enter**. Your complete codebase will be pushed automatically!
+### Repository Setup & Pushing Future Changes
+Your repository is synchronized with branch `main`.
 
-### Option B: Manual Command-Line Push
-Open your terminal in the project directory and run:
-
+To push future updates:
 ```bash
-# 1. Add your GitHub remote repository
-git remote add origin https://github.com/<your-username>/Patient_Health_Monitoring_System.git
-
-# 2. Push main branch
-git branch -M main
-git push -u origin main
+git add -A
+git commit -m "Update project files"
+git push
 ```
-
-### Enabling Free Public Live Dashboard (GitHub Pages)
-1. In your GitHub repository, navigate to **Settings** $\rightarrow$ **Pages**.
-2. Under **Build and deployment** $\rightarrow$ **Branch**, select `main` branch and folder `/ (root)`.
-3. Click **Save**.
-4. Within 60 seconds, GitHub will publish your live dashboard at:  
-   `https://<your-username>.github.io/Patient_Health_Monitoring_System/`
+Or double-click [`push_to_github.bat`](file:///C:/Users/hp/.gemini/antigravity/scratch/Patient_Health_Monitoring_System/push_to_github.bat).
 
 ---
 
