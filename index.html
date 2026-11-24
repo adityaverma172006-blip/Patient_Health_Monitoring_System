@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Patient Health Monitoring System — Live IoT Dashboard</title>
+  <style>
+    :root {
+      --bg: #0b1120;
+      --card-bg: rgba(17, 24, 39, 0.85);
+      --border: rgba(255, 255, 255, 0.08);
+      --text: #f3f4f6;
+      --text-muted: #9ca3af;
+      --normal: #10b981;
+      --normal-glow: rgba(16, 185, 129, 0.25);
+      --warning: #f59e0b;
+      --warning-glow: rgba(245, 158, 11, 0.25);
+      --critical: #ef4444;
+      --critical-glow: rgba(239, 68, 68, 0.35);
+      --emergency: #ec4899;
+      --emergency-glow: rgba(236, 72, 153, 0.4);
+      --accent: #3b82f6;
+      --cyan: #06b6d4;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    }
+
+    body {
+      background: radial-gradient(circle at top, #1e293b, var(--bg));
+      color: var(--text);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      padding: 20px 24px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      margin-bottom: 24px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    }
+
+    .title-group {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .logo-pulse {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #ef4444, #f59e0b);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      box-shadow: 0 0 20px rgba(239, 68, 68, 0.5);
+      animation: heartbeat 1.4s infinite ease-in-out;
+    }
+
+    @keyframes heartbeat {
+      0%, 100% { transform: scale(1); }
+      14% { transform: scale(1.15); }
+      28% { transform: scale(1); }
+      42% { transform: scale(1.1); }
+      70% { transform: scale(1); }
+    }
+
+    h1 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .subtitle {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 18px;
+      border-radius: 9999px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      box-shadow: 0 0 20px var(--normal-glow);
+      transition: all 0.3s ease;
+    }
+
+    .badge-normal {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid #10b981;
+      box-shadow: 0 0 20px var(--normal-glow);
+    }
+
+    .badge-warning {
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+      border: 1px solid #f59e0b;
+      box-shadow: 0 0 20px var(--warning-glow);
+      animation: pulse-warn 1s infinite alternate;
+    }
+
+    .badge-critical {
+      background: rgba(239, 68, 68, 0.2);
+      color: #f87171;
+      border: 1px solid #ef4444;
+      box-shadow: 0 0 25px var(--critical-glow);
+      animation: pulse-crit 0.8s infinite alternate;
+    }
+
+    .badge-emergency {
+      background: rgba(236, 72, 153, 0.25);
+      color: #f472b6;
+      border: 1px solid #ec4899;
+      box-shadow: 0 0 30px var(--emergency-glow);
+      animation: pulse-crit 0.5s infinite alternate;
+    }
+
+    @keyframes pulse-warn {
+      from { box-shadow: 0 0 10px rgba(245,158,11,0.2); }
+      to { box-shadow: 0 0 25px rgba(245,158,11,0.6); }
+    }
+
+    @keyframes pulse-crit {
+      from { box-shadow: 0 0 10px rgba(239,68,68,0.3); }
+      to { box-shadow: 0 0 35px rgba(239,68,68,0.8); }
+    }
+
+    /* Grid Layout */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+      transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(255,255,255,0.15);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .card-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+
+    .pin-tag {
+      font-size: 0.75rem;
+      font-family: monospace;
+      padding: 2px 8px;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.06);
+      color: var(--cyan);
+      border: 1px solid rgba(6, 182, 212, 0.2);
+    }
+
+    .metric-value-row {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .metric-value {
+      font-size: 2.8rem;
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: -0.03em;
+    }
+
+    .metric-unit {
+      font-size: 1rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    /* Progress bar */
+    .progress-track {
+      width: 100%;
+      height: 8px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+
+    .progress-bar {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.5s ease, background 0.3s ease;
+    }
+
+    .metric-limits {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    /* Emergency Card */
+    .emergency-card {
+      border: 1px solid rgba(236, 72, 153, 0.3);
+      background: linear-gradient(135deg, rgba(236,72,153,0.05), var(--card-bg));
+    }
+
+    .emergency-switch-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 14px;
+    }
+
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 64px;
+      height: 36px;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #374151;
+      transition: 0.3s;
+      border-radius: 34px;
+      border: 2px solid rgba(255,255,255,0.1);
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 24px;
+      width: 24px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: 0.3s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: #ec4899;
+      box-shadow: 0 0 20px rgba(236, 72, 153, 0.6);
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(28px);
+    }
+
+    /* Diagnostics Card */
+    .diag-card {
+      grid-column: 1 / -1;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+
+    .reasons-list {
+      list-style: none;
+      margin-top: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .reasons-list li {
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .reason-normal {
+      background: rgba(16, 185, 129, 0.1);
+      color: #34d399;
+      border-left: 3px solid #10b981;
+    }
+
+    .reason-warning {
+      background: rgba(245, 158, 11, 0.1);
+      color: #fbbf24;
+      border-left: 3px solid #f59e0b;
+    }
+
+    .reason-critical {
+      background: rgba(239, 68, 68, 0.12);
+      color: #f87171;
+      border-left: 3px solid #ef4444;
+    }
+
+    /* Graph Section */
+    .graph-section {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+
+    .graph-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    canvas#ecgCanvas {
+      width: 100%;
+      height: 120px;
+      background: #050a14;
+      border-radius: 8px;
+      border: 1px solid rgba(6, 182, 212, 0.2);
+    }
+
+    /* Controls Bar */
+    .controls-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 16px 20px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      margin-bottom: 24px;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      padding: 10px 18px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text);
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    button:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+
+    button.btn-primary {
+      background: #2563eb;
+      border-color: #3b82f6;
+    }
+
+    button.btn-primary:hover {
+      background: #1d4ed8;
+    }
+
+    button.btn-danger {
+      background: rgba(239, 68, 68, 0.2);
+      border-color: #ef4444;
+      color: #fca5a5;
+    }
+
+    button.btn-danger:hover {
+      background: rgba(239, 68, 68, 0.4);
+    }
+
+    button.active-patient {
+      border-color: #3b82f6;
+      background: rgba(59, 130, 246, 0.2);
+      color: #93c5fd;
+    }
+
+    /* Event Log Table */
+    .log-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      margin-top: 12px;
+    }
+
+    th, td {
+      padding: 10px 14px;
+      text-align: left;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+    th {
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 0.05em;
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 20px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    /* Banner for Educational Disclaimer */
+    .edu-banner {
+      background: rgba(59, 130, 246, 0.1);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-size: 0.8rem;
+      text-align: center;
+      color: #93c5fd;
+      margin-bottom: 20px;
+    }
+
+    @media (max-width: 768px) {
+      .metric-value { font-size: 2.2rem; }
+      header { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <div class="edu-banner">
+      ⚕️ <strong>Academic Project:</strong> Patient Health Monitoring System for B.Tech Demonstration — Simulation & Blynk IoT Cloud Architecture.
+    </div>
+
+    <!-- Header -->
+    <header>
+      <div class="title-group">
+        <div class="logo-pulse">❤️</div>
+        <div>
+          <h1>Patient Health Monitoring System</h1>
+          <div class="subtitle" id="patientInfo">Patient: P001 — Rahul Sharma (Age 28) | Updated: <span id="lastUpdated">Just now</span></div>
+        </div>
+      </div>
+      <div>
+        <div id="statusBadge" class="status-badge badge-normal">
+          <span id="statusDot">●</span> <span id="statusText">NORMAL</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Controls Bar -->
+    <div class="controls-bar">
+      <div class="btn-group">
+        <button id="btnP1" class="active-patient" onclick="selectPatient(0)">Patient 1 (Normal)</button>
+        <button id="btnP2" onclick="selectPatient(1)">Patient 2 (Warning)</button>
+        <button id="btnP3" onclick="selectPatient(2)">Patient 3 (Critical)</button>
+        <button id="btnLive" onclick="toggleAutoStream()">⚡ Auto Simulation: <span id="streamState">OFF</span></button>
+      </div>
+      <div class="btn-group">
+        <button id="soundBtn" onclick="toggleAudio()">🔔 Sound: <span id="soundState">ON</span></button>
+        <button onclick="downloadCSV()">📥 Export CSV Log</button>
+      </div>
+    </div>
+
+    <!-- Vital Cards Grid -->
+    <div class="dashboard-grid">
+
+      <!-- Heart Rate V0 -->
+      <div class="card" id="cardHR">
+        <div class="card-header">
+          <span class="card-title">Heart Rate</span>
+          <span class="pin-tag">PIN V0</span>
+        </div>
+        <div class="metric-value-row">
+          <span class="metric-value" id="valHR">82</span>
+          <span class="metric-unit">BPM</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-bar" id="barHR" style="width: 27%; background: var(--normal);"></div>
+        </div>
+        <div class="metric-limits">
+          <span>Min: 40</span>
+          <span>Normal: 60 - 100</span>
+          <span>Max: 180</span>
+        </div>
+      </div>
+
+      <!-- SpO2 V1 -->
+      <div class="card" id="cardSpO2">
+        <div class="card-header">
+          <span class="card-title">Blood Oxygen (SpO2)</span>
+          <span class="pin-tag">PIN V1</span>
+        </div>
+        <div class="metric-value-row">
+          <span class="metric-value" id="valSpO2">98</span>
+          <span class="metric-unit">%</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-bar" id="barSpO2" style="width: 98%; background: var(--normal);"></div>
+        </div>
+        <div class="metric-limits">
+          <span>Critical: &lt;90%</span>
+          <span>Warning: 90-94%</span>
+          <span>Normal: ≥95%</span>
+        </div>
+      </div>
+
+      <!-- Temperature V2 -->
+      <div class="card" id="cardTemp">
+        <div class="card-header">
+          <span class="card-title">Body Temperature</span>
+          <span class="pin-tag">PIN V2</span>
+        </div>
+        <div class="metric-value-row">
+          <span class="metric-value" id="valTemp">36.8</span>
+          <span class="metric-unit">°C</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-bar" id="barTemp" style="width: 48%; background: var(--normal);"></div>
+        </div>
+        <div class="metric-limits">
+          <span>Low: &lt;35.0°C</span>
+          <span>Normal: 36.0 - 37.5°C</span>
+          <span>High: ≥39.0°C</span>
+        </div>
+      </div>
+
+      <!-- Emergency Switch V4 -->
+      <div class="card emergency-card" id="cardEmergency">
+        <div class="card-header">
+          <span class="card-title" style="color: #f472b6;">Blynk Emergency Switch</span>
+          <span class="pin-tag" style="color: #ec4899; border-color: rgba(236,72,153,0.3);">PIN V4</span>
+        </div>
+        <div class="metric-value-row">
+          <span class="metric-value" id="valEmergency" style="color: #9ca3af; font-size: 2.2rem;">OFF</span>
+          <span class="metric-unit">(State: <span id="numEmergency">0</span>)</span>
+        </div>
+        <div class="emergency-switch-container">
+          <span style="font-size: 0.85rem; color: var(--text-muted);">Activate Manual SOS Alert:</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="emergencyToggle" onchange="toggleEmergency(this.checked)">
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Diagnostic Breakdown -->
+    <div class="diag-card">
+      <div class="card-header" style="margin-bottom: 8px;">
+        <span class="card-title">Clinical Diagnostic Reason Breakdown</span>
+        <span class="pin-tag">STATUS V3 = <span id="codeV3">0</span></span>
+      </div>
+      <ul class="reasons-list" id="reasonsContainer">
+        <li class="reason-normal">✓ All physiological parameters within normal baseline range.</li>
+      </ul>
+    </div>
+
+    <!-- Real-time ECG Waveform Animation -->
+    <div class="graph-section">
+      <div class="graph-header">
+        <span class="card-title">Real-Time Rhythm Lead II (ECG / Plethysmograph Waveform)</span>
+        <span style="font-size: 0.8rem; color: #06b6d4;">25 mm/s | 10 mm/mV</span>
+      </div>
+      <canvas id="ecgCanvas" width="1200" height="120"></canvas>
+    </div>
+
+    <!-- Event History Table -->
+    <div class="log-card">
+      <div class="card-header">
+        <span class="card-title">Telemetry Event Log</span>
+        <span style="font-size: 0.8rem; color: var(--text-muted);" id="logCount">3 Records</span>
+      </div>
+      <div style="overflow-x: auto;">
+        <table id="logTable">
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>Patient ID</th>
+              <th>Heart Rate</th>
+              <th>SpO2</th>
+              <th>Temp</th>
+              <th>Status</th>
+              <th>Emergency V4</th>
+            </tr>
+          </thead>
+          <tbody id="logBody">
+            <!-- dynamic rows -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <footer>
+      Patient Health Monitoring System • Built for B.Tech Academic Project & Viva • Integrates Blynk Cloud REST API & Python Backend
+    </footer>
+
+  </div>
+
+  <script>
+    // Physiological Database
+    const patients = [
+      { id: "P001", name: "Rahul Sharma", age: 28, hr: 82, spo2: 98, temp: 36.8, condition: "NORMAL" },
+      { id: "P002", name: "Priya Patel", age: 45, hr: 105, spo2: 92, temp: 38.2, condition: "WARNING" },
+      { id: "P003", name: "Amit Kumar", age: 62, hr: 135, spo2: 86, temp: 39.4, condition: "CRITICAL" }
+    ];
+
+    let currentPatientIndex = 0;
+    let emergencyActive = false;
+    let autoStream = false;
+    let streamInterval = null;
+    let soundEnabled = true;
+    let audioCtx = null;
+    let telemetryHistory = [];
+
+    // Audio Synthesizer (Web Audio API)
+    function playBeep(freq = 600, duration = 0.15) {
+      if (!soundEnabled) return;
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) {
+        console.warn("Audio unavailable:", e);
+      }
+    }
+
+    function toggleAudio() {
+      soundEnabled = !soundEnabled;
+      document.getElementById("soundState").textContent = soundEnabled ? "ON" : "OFF";
+      if (soundEnabled) playBeep(880, 0.1);
+    }
+
+    // Evaluation Logic (Matches patient_monitor.py)
+    function evaluateHealth(hr, spo2, temp) {
+      let hrStatus = "NORMAL", hrReason = null;
+      let spo2Status = "NORMAL", spo2Reason = null;
+      let tempStatus = "NORMAL", tempReason = null;
+
+      // Heart Rate
+      if (hr < 40 || hr > 130) {
+        hrStatus = "CRITICAL";
+        hrReason = `Heart rate is critically abnormal (${hr} BPM).`;
+      } else if (hr < 60 || hr > 100) {
+        hrStatus = "WARNING";
+        hrReason = `Heart rate is abnormal (${hr} BPM).`;
+      }
+
+      // SpO2
+      if (spo2 < 90) {
+        spo2Status = "CRITICAL";
+        spo2Reason = `Oxygen level is critically low (${spo2}%).`;
+      } else if (spo2 <= 94) {
+        spo2Status = "WARNING";
+        spo2Reason = `Oxygen level is low (${spo2}%).`;
+      }
+
+      // Temperature
+      if (temp >= 39.0) {
+        tempStatus = "CRITICAL";
+        tempReason = `Temperature is critically high (${temp}°C).`;
+      } else if (temp < 35.0) {
+        tempStatus = "CRITICAL";
+        tempReason = `Temperature is critically low (${temp}°C).`;
+      } else if (temp > 37.5) {
+        tempStatus = "WARNING";
+        tempReason = `Temperature is elevated (${temp}°C).`;
+      }
+
+      // Overall
+      let overall = "NORMAL";
+      if (emergencyActive) {
+        overall = "EMERGENCY";
+      } else if (hrStatus === "CRITICAL" || spo2Status === "CRITICAL" || tempStatus === "CRITICAL") {
+        overall = "CRITICAL";
+      } else if (hrStatus === "WARNING" || spo2Status === "WARNING" || tempStatus === "WARNING") {
+        overall = "WARNING";
+      }
+
+      const reasons = [];
+      if (emergencyActive) reasons.push("EMERGENCY SWITCH ACTIVATED via Blynk V4.");
+      if (hrReason) reasons.push(hrReason);
+      if (spo2Reason) reasons.push(spo2Reason);
+      if (tempReason) reasons.push(tempReason);
+      if (reasons.length === 0) reasons.push("All physiological parameters within normal baseline range.");
+
+      const statusCodes = { "NORMAL": 0, "WARNING": 1, "CRITICAL": 2, "EMERGENCY": 3 };
+
+      return {
+        overall,
+        statusCode: statusCodes[overall],
+        reasons,
+        hrStatus,
+        spo2Status,
+        tempStatus
+      };
+    }
+
+    // UI Update
+    function updateUI(p, hr, spo2, temp) {
+      const evalResult = evaluateHealth(hr, spo2, temp);
+
+      // Patient Info
+      document.getElementById("patientInfo").innerHTML =
+        `Patient: <strong>${p.id}</strong> — ${p.name} (Age ${p.age}) | Updated: <strong>${new Date().toLocaleTimeString()}</strong>`;
+      document.getElementById("lastUpdated").textContent = new Date().toLocaleTimeString();
+
+      // Values
+      document.getElementById("valHR").textContent = Math.round(hr);
+      document.getElementById("valSpO2").textContent = Math.round(spo2);
+      document.getElementById("valTemp").textContent = temp.toFixed(1);
+      document.getElementById("codeV3").textContent = evalResult.statusCode;
+
+      // Status Badge
+      const badge = document.getElementById("statusBadge");
+      badge.className = `status-badge badge-${evalResult.overall.toLowerCase()}`;
+      document.getElementById("statusText").textContent = evalResult.overall;
+
+      // Progress bars & colors
+      const barHR = document.getElementById("barHR");
+      const hrPct = Math.min(Math.max(((hr - 40) / 140) * 100, 5), 100);
+      barHR.style.width = `${hrPct}%`;
+      barHR.style.background = evalResult.hrStatus === 'CRITICAL' ? 'var(--critical)' : (evalResult.hrStatus === 'WARNING' ? 'var(--warning)' : 'var(--normal)');
+
+      const barSpO2 = document.getElementById("barSpO2");
+      barSpO2.style.width = `${spo2}%`;
+      barSpO2.style.background = evalResult.spo2Status === 'CRITICAL' ? 'var(--critical)' : (evalResult.spo2Status === 'WARNING' ? 'var(--warning)' : 'var(--normal)');
+
+      const barTemp = document.getElementById("barTemp");
+      const tempPct = Math.min(Math.max(((temp - 34) / 8) * 100, 5), 100);
+      barTemp.style.width = `${tempPct}%`;
+      barTemp.style.background = evalResult.tempStatus === 'CRITICAL' ? 'var(--critical)' : (evalResult.tempStatus === 'WARNING' ? 'var(--warning)' : 'var(--normal)');
+
+      // Reasons list
+      const reasonsBox = document.getElementById("reasonsContainer");
+      reasonsBox.innerHTML = "";
+      evalResult.reasons.forEach(r => {
+        const li = document.createElement("li");
+        li.className = evalResult.overall === 'CRITICAL' || evalResult.overall === 'EMERGENCY'
+          ? "reason-critical"
+          : (evalResult.overall === 'WARNING' ? "reason-warning" : "reason-normal");
+        li.textContent = (evalResult.overall === 'NORMAL' ? "✓ " : "⚠️ ") + r;
+        reasonsBox.appendChild(li);
+      });
+
+      // Sound alerts
+      if (evalResult.overall === 'CRITICAL' || evalResult.overall === 'EMERGENCY') {
+        playBeep(920, 0.25);
+      } else if (evalResult.overall === 'WARNING') {
+        playBeep(640, 0.15);
+      } else {
+        playBeep(480, 0.05);
+      }
+
+      // Append Log
+      addLogEntry(p.id, Math.round(hr), Math.round(spo2), temp.toFixed(1), evalResult.overall, emergencyActive ? "1 (ON)" : "0 (OFF)");
+    }
+
+    function selectPatient(idx) {
+      currentPatientIndex = idx;
+      ["btnP1", "btnP2", "btnP3"].forEach((id, i) => {
+        document.getElementById(id).className = (i === idx) ? "active-patient" : "";
+      });
+      const p = patients[idx];
+      updateUI(p, p.hr, p.spo2, p.temp);
+    }
+
+    function toggleEmergency(active) {
+      emergencyActive = active;
+      const label = document.getElementById("valEmergency");
+      const num = document.getElementById("numEmergency");
+      if (active) {
+        label.textContent = "ON";
+        label.style.color = "#ec4899";
+        num.textContent = "1";
+        playBeep(1000, 0.5);
+      } else {
+        label.textContent = "OFF";
+        label.style.color = "#9ca3af";
+        num.textContent = "0";
+      }
+      const p = patients[currentPatientIndex];
+      updateUI(p, p.hr, p.spo2, p.temp);
+    }
+
+    function toggleAutoStream() {
+      autoStream = !autoStream;
+      document.getElementById("streamState").textContent = autoStream ? "ON" : "OFF";
+      document.getElementById("btnLive").style.borderColor = autoStream ? "#10b981" : "var(--border)";
+
+      if (autoStream) {
+        streamInterval = setInterval(() => {
+          currentPatientIndex = (currentPatientIndex + 1) % patients.length;
+          selectPatient(currentPatientIndex);
+        }, 3500);
+      } else {
+        clearInterval(streamInterval);
+      }
+    }
+
+    function addLogEntry(id, hr, spo2, temp, status, emg) {
+      const timeStr = new Date().toLocaleTimeString();
+      const entry = { time: timeStr, id, hr, spo2, temp, status, emg };
+      telemetryHistory.unshift(entry);
+      if (telemetryHistory.length > 25) telemetryHistory.pop();
+
+      const tbody = document.getElementById("logBody");
+      tbody.innerHTML = "";
+      telemetryHistory.forEach(row => {
+        const tr = document.createElement("tr");
+        const statusColor = row.status === 'CRITICAL' || row.status === 'EMERGENCY' ? '#f87171' : (row.status === 'WARNING' ? '#fbbf24' : '#34d399');
+        tr.innerHTML = `
+          <td>${row.time}</td>
+          <td><strong>${row.id}</strong></td>
+          <td>${row.hr} BPM</td>
+          <td>${row.spo2}%</td>
+          <td>${row.temp}°C</td>
+          <td><span style="color: ${statusColor}; font-weight: bold;">${row.status}</span></td>
+          <td>${row.emg}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+      document.getElementById("logCount").textContent = `${telemetryHistory.length} Records`;
+    }
+
+    function downloadCSV() {
+      let csv = "Timestamp,Patient_ID,Heart_Rate_BPM,SpO2_Percent,Temperature_C,Status,Emergency_V4\n";
+      telemetryHistory.forEach(r => {
+        csv += `"${r.time}","${r.id}",${r.hr},${r.spo2},${r.temp},"${r.status}","${r.emg}"\n`;
+      });
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `Patient_Health_Telemetry_${Date.now()}.csv`;
+      link.click();
+    }
+
+    // Canvas ECG Waveform Animation
+    const canvas = document.getElementById("ecgCanvas");
+    const ctx = canvas.getContext("2d");
+    let ecgX = 0;
+    let lastY = 60;
+    const ecgBuffer = [];
+
+    function generateECGPoint(step) {
+      const mod = step % 60;
+      if (mod === 10) return 60 - 6;      // P wave
+      if (mod === 12) return 60;
+      if (mod === 18) return 60 + 5;      // Q wave
+      if (mod === 20) return 60 - 45;     // R wave peak
+      if (mod === 22) return 60 + 15;     // S wave dip
+      if (mod === 26) return 60;
+      if (mod === 34) return 60 - 12;     // T wave
+      if (mod === 40) return 60;
+      return 60 + (Math.random() * 2 - 1); // baseline jitter
+    }
+
+    let stepCounter = 0;
+
+    function drawECG() {
+      ctx.fillStyle = "rgba(5, 10, 20, 0.1)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Grid Lines
+      ctx.strokeStyle = "rgba(6, 182, 212, 0.05)";
+      ctx.lineWidth = 1;
+      for (let x = 0; x < canvas.width; x += 40) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, canvas.height);
+        ctx.stroke();
+      }
+
+      ctx.strokeStyle = "#06b6d4";
+      ctx.lineWidth = 2;
+      ctx.shadowColor = "#06b6d4";
+      ctx.shadowBlur = 8;
+
+      ctx.beginPath();
+      ctx.moveTo(ecgX, lastY);
+
+      stepCounter++;
+      const targetY = generateECGPoint(stepCounter);
+      ecgX += 3;
+      if (ecgX > canvas.width) {
+        ecgX = 0;
+      }
+
+      ctx.lineTo(ecgX, targetY);
+      ctx.stroke();
+      lastY = targetY;
+
+      requestAnimationFrame(drawECG);
+    }
+
+    // Initialize
+    window.addEventListener("DOMContentLoaded", () => {
+      selectPatient(0);
+      drawECG();
+    });
+  </script>
+</body>
+</html>
