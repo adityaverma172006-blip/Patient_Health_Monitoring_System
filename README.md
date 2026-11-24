@@ -15,30 +15,97 @@
 ## Table of Contents
 
 1. [Project Title & Overview](#patient-health-monitoring-system)
-2. [Abstract](#abstract)
-3. [Problem Statement](#problem-statement)
-4. [Project Objectives](#project-objectives)
-5. [Key Features](#key-features)
-6. [Hardware Requirements](#hardware-requirements)
-7. [Software Requirements](#software-requirements)
-8. [Technologies Used](#technologies-used)
-9. [Project Directory Structure](#project-directory-structure)
-10. [System Architecture](#system-architecture)
-11. [Working Principle](#working-principle)
-12. [Python Implementation Details](#python-implementation-details)
-13. [Health Parameter Thresholds & Evaluation Logic](#health-parameter-thresholds--evaluation-logic)
-14. [Excel Integration](#excel-integration)
-15. [Blynk IoT Cloud Integration](#blynk-iot-cloud-integration)
-16. [Virtual Pins Mapping](#virtual-pins-mapping)
-17. [Emergency Switch Mechanism](#emergency-switch-mechanism)
-18. [Blynk Cloud Dashboard Setup Guide](#blynk-cloud-dashboard-setup-guide)
-19. [Installation Steps (Windows)](#installation-steps-windows)
-20. [How to Run & Menu Walkthrough](#how-to-run--menu-walkthrough)
-21. [Testing Instructions](#testing-instructions)
-22. [System Limitations](#system-limitations)
-23. [Future Improvements](#future-improvements)
-24. [Conclusion](#conclusion)
-25. [Viva Questions and Answers (20 Q&A Pairs)](#viva-questions-and-answers)
+2. [Live Dashboards & Visual Screenshots](#live-dashboards--visual-screenshots)
+3. [GitHub Repository Setup & 1-Click Push](#github-repository-setup--1-click-push)
+4. [Abstract](#abstract)
+5. [Problem Statement](#problem-statement)
+6. [Project Objectives](#project-objectives)
+7. [Key Features](#key-features)
+8. [Hardware Requirements](#hardware-requirements)
+9. [Software Requirements](#software-requirements)
+10. [Technologies Used](#technologies-used)
+11. [Project Directory Structure](#project-directory-structure)
+12. [System Architecture](#system-architecture)
+13. [Working Principle](#working-principle)
+14. [Python Implementation Details](#python-implementation-details)
+15. [Health Parameter Thresholds & Evaluation Logic](#health-parameter-thresholds--evaluation-logic)
+16. [Excel Integration](#excel-integration)
+17. [Blynk IoT Cloud Integration](#blynk-iot-cloud-integration)
+18. [Virtual Pins Mapping](#virtual-pins-mapping)
+19. [Emergency Switch Mechanism](#emergency-switch-mechanism)
+20. [Blynk Cloud Dashboard Setup Guide](#blynk-cloud-dashboard-setup-guide)
+21. [Installation Steps (Windows)](#installation-steps-windows)
+22. [How to Run & Menu Walkthrough](#how-to-run--menu-walkthrough)
+23. [Testing Instructions](#testing-instructions)
+24. [System Limitations](#system-limitations)
+25. [Future Improvements](#future-improvements)
+26. [Conclusion](#conclusion)
+27. [Viva Questions and Answers (20 Q&A Pairs)](#viva-questions-and-answers)
+
+---
+
+## Live Dashboards & Visual Screenshots
+
+This system provides **three complementary dashboard interfaces**:
+
+1. **Standalone & Local Live Web Dashboard (`index.html` / `web_dashboard.py`):**
+   - **Offline / Local Access:** Double-click [`index.html`](file:///C:/Users/hp/.gemini/antigravity/scratch/Patient_Health_Monitoring_System/index.html) or run `python web_dashboard.py` to open `http://127.0.0.1:5000`
+   - **Free Public Web Hosting (GitHub Pages):** When pushed to GitHub, enable GitHub Pages to get an instant live web URL:  
+     `https://<your-username>.github.io/Patient_Health_Monitoring_System/`
+2. **Blynk IoT Cloud Web & Mobile Dashboard:**
+   - **Blynk Console Live Link:** [https://blynk.cloud/dashboard/](https://blynk.cloud/dashboard/)
+3. **Interactive Terminal Monitoring Console:**
+   - Run `python main.py` in Windows PowerShell or CMD.
+
+### 1. Interactive Live Web Dashboard
+Real-time animated ECG pulse line graph, vital cards with circular progress indicators, condition badges, and emergency switch toggle with audio synthesis.
+
+![Live Web Dashboard](screenshots/live_web_dashboard.png)
+
+### 2. Blynk IoT Cloud Dashboard — Normal Condition
+Blynk cloud telemetry in NORMAL state (Heart Rate: 82 BPM, $SpO_2$: 98%, Temp: 36.8°C, Status: NORMAL [V3=0], Emergency Switch: OFF [V4=0]).
+
+![Blynk IoT Dashboard Normal](screenshots/blynk_dashboard_normal.png)
+
+### 3. Blynk IoT Cloud Dashboard — Critical Alert & Emergency Switch ON
+Blynk cloud telemetry in CRITICAL ALERT state with high fever, tachycardia, hypoxia, and active Emergency Switch V4 trigger.
+
+![Blynk IoT Dashboard Critical](screenshots/blynk_dashboard_critical.png)
+
+### 4. Terminal Monitoring Console Demo
+Diagnostic startup validation, telemetry ingestion, clinical condition evaluation card, and Blynk cloud dispatch confirmation.
+
+![Terminal Monitoring Demo](screenshots/terminal_monitoring_demo.png)
+
+---
+
+## GitHub Repository Setup & 1-Click Push
+
+The project is pre-configured with Git version control on branch `main`.
+
+### Option A: 1-Click Push Wizard (Recommended for Windows)
+1. Double-click the file [`push_to_github.bat`](file:///C:/Users/hp/.gemini/antigravity/scratch/Patient_Health_Monitoring_System/push_to_github.bat) (or run `.\push_to_github.ps1` in VS Code terminal).
+2. It guides you to create a repository at [https://github.com/new](https://github.com/new) named `Patient_Health_Monitoring_System`.
+3. Paste your repository URL and press **Enter**. Your complete codebase will be pushed automatically!
+
+### Option B: Manual Command-Line Push
+Open your terminal in the project directory and run:
+
+```bash
+# 1. Add your GitHub remote repository
+git remote add origin https://github.com/<your-username>/Patient_Health_Monitoring_System.git
+
+# 2. Push main branch
+git branch -M main
+git push -u origin main
+```
+
+### Enabling Free Public Live Dashboard (GitHub Pages)
+1. In your GitHub repository, navigate to **Settings** $\rightarrow$ **Pages**.
+2. Under **Build and deployment** $\rightarrow$ **Branch**, select `main` branch and folder `/ (root)`.
+3. Click **Save**.
+4. Within 60 seconds, GitHub will publish your live dashboard at:  
+   `https://<your-username>.github.io/Patient_Health_Monitoring_System/`
 
 ---
 
@@ -152,14 +219,28 @@ Patient_Health_Monitoring_System/
 ├── patient_monitor.py                # Core medical evaluation, thresholding, and console display logic
 ├── blynk_service.py                  # HTTP client encapsulating Blynk Cloud REST API communication
 ├── excel_service.py                  # Service for reading, writing, and validating Excel spreadsheets
-├── main.py                           # CLI entry point, startup diagnostic checks, and interactive menu
+├── main.py                           # CLI entry point, startup diagnostic checks, and interactive menu (1-9)
 ├── patient_data.xlsx                 # Primary Excel spreadsheet storing tabular patient health records
+│
+├── index.html                        # Standalone Live Web Dashboard (Real-time gauges, ECG, Audio SOS, CSV)
+├── dashboard.html                    # Duplicate copy of Live Web Dashboard for instant access
+├── web_dashboard.py                  # Built-in local web server running Live Web Dashboard at port 5000
+├── push_to_github.bat                # 1-Click Windows batch script to push project to GitHub
+├── push_to_github.ps1                # PowerShell script to push project to GitHub
+├── generate_screenshots.py           # Automated utility to regenerate UI screenshots
+│
+├── screenshots/                      # High-resolution UI screenshots for college viva & documentation
+│   ├── blynk_dashboard_normal.png    # Blynk cloud dashboard in NORMAL state
+│   ├── blynk_dashboard_critical.png  # Blynk cloud dashboard in CRITICAL alert state
+│   ├── live_web_dashboard.png        # Live interactive Web Dashboard UI preview
+│   └── terminal_monitoring_demo.png  # Interactive terminal menu and output
 │
 ├── logs/
 │   └── monitoring.log                # Rolling log file storing system activity and clinical alerts
 │
 └── tests/
-    └── test_patient_monitor.py       # Unit test suite verifying logic, thresholds, and service modules
+    ├── __init__.py                   # Test suite package initializer
+    └── test_patient_monitor.py       # 48 Automated unit tests verifying logic, thresholds, and services
 ```
 
 ---
@@ -543,9 +624,10 @@ When you start the system (`python main.py`), the program executes automated dia
   5. Start automatic monitoring
   6. View latest patient data
   7. Check Blynk connection
-  8. Exit
+  8. Launch Live Web Dashboard (Browser)
+  9. Exit
 ==================================================
-  Enter your choice (1-8):
+  Enter your choice (1-9):
 ```
 
 ### Step-by-Step Menu Features:
